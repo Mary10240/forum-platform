@@ -58,7 +58,7 @@ CREATE DATABASE zhihu;
 
 2. 执行数据库初始化脚本：
 ```bash
-mysql -u root -p zhihu < DBLabScript_22251236.sql
+mysql -u root -p zhihu < DBLabScript_xxx.sql
 mysql -u root -p zhihu < stored_procedures.sql
 mysql -u root -p zhihu < triggers.sql
 ```
@@ -83,7 +83,7 @@ python app.py
 flaskProject1/
 ├── app.py                 # 主应用文件
 ├── requirements.txt       # 依赖列表
-├── DBLabScript_22251236.sql  # 数据库初始化脚本
+├── DBLabScript_xxx.sql  # 数据库初始化脚本
 ├── stored_procedures.sql  # 存储过程
 ├── triggers.sql           # 触发器
 ├── .gitignore             # Git 忽略配置
