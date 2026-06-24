@@ -107,7 +107,3 @@ GET /api/topic/<topic_id>
 1. 生产环境请将 `Talisman` 的 `force_https` 设置为 `True`
 2. 使用环境变量存储敏感信息（数据库密码、SECRET_KEY）
 3. 定期更新依赖包
-
-## License
-
-MIT License
