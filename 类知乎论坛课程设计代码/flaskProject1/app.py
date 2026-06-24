@@ -18,7 +18,7 @@ from sqlalchemy import text
 
 app = Flask(__name__)
 app.config['SECRET_KEY'] = 'your-secret-key-here'  # 请更改为一个安全的密钥
-app.config['SQLALCHEMY_DATABASE_URI'] = 'mysql+pymysql://root:mby123456@localhost/zhihu'
+app.config['SQLALCHEMY_DATABASE_URI'] = 'mysql+pymysql://自己的密码/zhihu'
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 
 db = SQLAlchemy(app)
