@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{ topic.TopicName }} - 知乎</title>
+    <link href="https://cdn.bootcdn.net/ajax/libs/twitter-bootstrap/5.1.3/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        .question-card {
+            background: white;
+            border-radius: 8px;
+            padding: 20px;
+            margin-bottom: 20px;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+        }
+        .question-card:hover {
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+        }
+    </style>
+</head>
+<body>
+    <nav class="navbar navbar-expand-lg navbar-light bg-light">
+        <div class="container">
+            <a class="navbar-brand" href="{{ url_for('index') }}">知乎</a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav me-auto">
+                    <li class="nav-item">
+                        <a class="nav-link" href="{{ url_for('index') }}">首页</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="{{ url_for('topic_list') }}">话题</a>
+                    </li>
+                </ul>
+                <div class="d-flex">
+                    {% if current_user.is_authenticated %}
+                        <a href="{{ url_for('new_question') }}" class="btn btn-primary me-3">提问</a>
+                        <div class="dropdown">
+                            <button class="btn btn-link dropdown-toggle" type="button" id="userDropdown" data-bs-toggle="dropdown">
+                                {{ current_user.Username }}
+                            </button>
+                            <ul class="dropdown-menu dropdown-menu-end">
+                                <li><a class="dropdown-item" href="{{ url_for('user_profile', user_id=current_user.UserID) }}">个人主页</a></li>
+                                <li><a class="dropdown-item" href="{{ url_for('edit_profile', user_id=current_user.UserID) }}">编辑资料</a></li>
+                                <li><hr class="dropdown-divider"></li>
+                                <li><a class="dropdown-item" href="{{ url_for('logout') }}">退出</a></li>
+                            </ul>
+                        </div>
+                    {% else %}
+                        <a href="{{ url_for('login') }}" class="btn btn-outline-primary me-2">登录</a>
+                        <a href="{{ url_for('register') }}" class="btn btn-primary">注册</a>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container mt-4">
+        {% with messages = get_flashed_messages() %}
+            {% if messages %}
+                {% for message in messages %}
+                    <div class="alert alert-info">{{ message }}</div>
+                {% endfor %}
+            {% endif %}
+        {% endwith %}
+
+        <div class="card mb-4">
+            <div class="card-body">
+                <h5 class="card-title" id="topic-name">{{ topic.TopicName }}</h5>
+                <p class="card-text">问题数量：<span id="question-count">{{ topic.question_count }}</span></p>
+            </div>
+        </div>
+
+        <h3>问题列表</h3>
+        {% for question in questions %}
+        <div class="card mb-3">
+            <div class="card-body">
+                <h5 class="card-title">{{ question.Title }}</h5>
+                <p class="card-text">{{ question.Content }}</p>
+                <p class="card-text"><small class="text-muted">发布时间：{{ question.CreateTime.strftime('%Y-%m-%d %H:%M:%S') }}</small></p>
+                <a href="{{ url_for('question_detail', question_id=question.QuestionID) }}" class="btn btn-primary">查看详情</a>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+
+    <script src="https://cdn.bootcdn.net/ajax/libs/twitter-bootstrap/5.1.3/js/bootstrap.bundle.min.js"></script>
+    <script>
+    function loadTopicData(topicId) {
+        fetch(`/api/topic/${topicId}`)
+            .then(response => response.json())
+            .then(data => {
+                // 更新页面上的话题信息
+                document.getElementById('topic-name').textContent = data.TopicName;
+                document.getElementById('question-count').textContent = data.question_count;
+            })
+            .catch(error => console.error('Error:', error));
+    }
+
+    // 页面加载时调用
+    document.addEventListener('DOMContentLoaded', function() {
+        const topicId = {{ topic.TopicID }};
+        loadTopicData(topicId);
+    });
+    </script>
+</body>
+</html> 

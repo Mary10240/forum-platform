@@ -1,0 +1,176 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{ question.Title }} - 知乎</title>
+    <link href="https://cdn.bootcdn.net/ajax/libs/twitter-bootstrap/5.1.3/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        .question-card, .answer-card {
+            background: white;
+            border-radius: 8px;
+            padding: 20px;
+            margin-bottom: 20px;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+        }
+        .answer-form {
+            margin-top: 20px;
+        }
+        .comment-section {
+            margin-top: 15px;
+            padding-top: 15px;
+            border-top: 1px solid #eee;
+        }
+        .comment {
+            padding: 10px;
+            margin-bottom: 10px;
+            background: #f8f9fa;
+            border-radius: 4px;
+        }
+    </style>
+</head>
+<body>
+    <nav class="navbar navbar-expand-lg navbar-light bg-light">
+        <div class="container">
+            <a class="navbar-brand" href="{{ url_for('index') }}">知乎</a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav me-auto">
+                    <li class="nav-item">
+                        <a class="nav-link" href="{{ url_for('index') }}">首页</a>
+                    </li>
+                     <li class="nav-item">
+                          <a class="nav-link" href="{{ url_for('topic_list') }}">话题</a>
+                      </li>
+                </ul>
+                 <form action="{{ url_for('search') }}" method="GET" class="d-flex me-3">
+                      <input type="text" name="q" class="form-control" placeholder="搜索问题或话题..." style="width: 200px;">
+                      <input type="hidden" name="type" value="question">
+                      <button type="submit" class="btn btn-outline-primary ms-2">搜索</button>
+                  </form>
+                <div class="d-flex">
+                    {% if current_user.is_authenticated %}
+                        <div class="dropdown">
+                            <a class="btn btn-secondary dropdown-toggle" href="#" role="button" id="dropdownMenuLink" data-bs-toggle="dropdown" aria-expanded="false">
+                                {{ current_user.Username }}
+                            </a>
+                            <ul class="dropdown-menu" aria-labelledby="dropdownMenuLink">
+                                <li><a class="dropdown-item" href="{{ url_for('user_profile', user_id=current_user.UserID) }}">个人主页</a></li>
+                                <li><a class="dropdown-item" href="{{ url_for('logout') }}">退出登录</a></li>
+                            </ul>
+                        </div>
+                    {% else %}
+                        <a href="{{ url_for('login') }}" class="btn btn-outline-primary me-2">登录</a>
+                        <a href="{{ url_for('register') }}" class="btn btn-primary">注册</a>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container mt-5">
+        <div class="card">
+            <div class="card-body">
+                <h1 class="card-title">{{ question.Title }}</h1>
+                <p class="card-text">{{ question.Content }}</p>
+                <p class="card-text"><small class="text-muted">话题: {{ question.topic.TopicName }} - 提问者: {{ question.user.Username }} - 发布于: {{ question.CreateTime.strftime('%Y-%m-%d %H:%M') }}</small></p>
+                {% if current_user.is_authenticated and current_user.UserID == question.UserID %}
+                    <a href="{{ url_for('edit_question', question_id=question.QuestionID) }}" class="btn btn-primary btn-sm me-2">编辑问题</a>
+                    <form action="{{ url_for('delete_question', question_id=question.QuestionID) }}" method="POST" class="d-inline" onsubmit="return confirm('确定要删除此问题吗？');">
+                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                        <button type="submit" class="btn btn-danger btn-sm">删除问题</button>
+                    </form>
+                {% endif %}
+            </div>
+        </div>
+
+        <h3 class="mt-4">回答 ({{ question.AnswerCount }})</h3>
+
+        {% for answer in question.answers %}
+            <div class="card mt-3">
+                <div class="card-body">
+                    <p class="card-text">{{ answer.Content }}</p>
+                    <p class="card-text"><small class="text-muted">回答者: {{ answer.user.Username }} - 回答于: {{ answer.AnswerTime.strftime('%Y-%m-%d %H:%M') }}</small></p>
+
+                    <!-- 点赞按钮和计数 -->
+                    <form action="{{ url_for('upvote_answer', answer_id=answer.AnswerID) }}" method="POST" class="d-inline me-2">
+                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                        <button type="submit" class="btn btn-outline-primary btn-sm">赞同 {{ answer.UpvoteCount }}</button>
+                    </form>
+
+                    {% if current_user.is_authenticated and current_user.UserID == answer.UserID %}
+                        <form action="{{ url_for('delete_answer', answer_id=answer.AnswerID) }}" method="POST" class="d-inline" onsubmit="return confirm('确定要删除此回答吗？');">
+                            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                            <button type="submit" class="btn btn-danger btn-sm">删除回答</button>
+                        </form>
+                    {% endif %}
+
+                    <!-- 评论部分 -->
+                    <div class="comments mt-3">
+                        <h6>评论 ({{ answer.comments|length }})</h6>
+                        {% for comment in answer.comments %}
+                            <div class="card card-body bg-light mt-2">
+                                <p class="mb-1">{{ comment.Content }}</p>
+                                <small class="text-muted">评论者: {{ comment.user.Username }} - 评论于: {{ comment.CommentTime.strftime('%Y-%m-%d %H:%M') }}</small>
+                            </div>
+                        {% endfor %}
+
+                        {% if current_user.is_authenticated %}
+                            <form action="{{ url_for('add_comment', answer_id=answer.AnswerID) }}" method="POST" class="mt-3">
+                                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                                <div class="mb-3">
+                                    <textarea class="form-control form-control-sm" name="content" rows="1" placeholder="添加评论..." required></textarea>
+                                </div>
+                                <button type="submit" class="btn btn-primary btn-sm">发表评论</button>
+                            </form>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        {% endfor %}
+
+        {% if current_user.is_authenticated %}
+            <h3 class="mt-4">发表你的回答</h3>
+            {% with messages = get_flashed_messages() %}
+                {% if messages %}
+                    {% for message in messages %}
+                        <div class="alert alert-danger">{{ message }}</div>
+                    {% endfor %}
+                {% endif %}
+            {% endwith %}
+            <form action="{{ url_for('add_answer', question_id=question.QuestionID) }}" method="POST" class="mt-3">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                <div class="mb-3">
+                    <textarea class="form-control" name="content" rows="5" placeholder="写下你的回答..." required></textarea>
+                </div>
+                <button type="submit" class="btn btn-success">提交回答</button>
+            </form>
+        {% else %}
+            <p class="mt-4"><a href="{{ url_for('login') }}">登录</a>后才能回答问题。</p>
+        {% endif %}
+
+    </div>
+
+    <script src="https://cdn.bootcdn.net/ajax/libs/twitter-bootstrap/5.1.3/js/bootstrap.bundle.min.js"></script>
+    <script>
+    function loadQuestionData(questionId) {
+        fetch(`/api/question/${questionId}`)
+            .then(response => response.json())
+            .then(data => {
+                // 更新页面上的问题信息
+                document.getElementById('question-title').textContent = data.Title;
+                document.getElementById('answer-count').textContent = data.answer_count;
+            })
+            .catch(error => console.error('Error:', error));
+    }
+
+    // 页面加载时调用
+    document.addEventListener('DOMContentLoaded', function() {
+        const questionId = {{ question.QuestionID }};
+        loadQuestionData(questionId);
+    });
+    </script>
+</body>
+</html> 

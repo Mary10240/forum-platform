@@ -1,0 +1,185 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{ user.Username }} 的个人主页 - 知乎</title>
+    <link href="https://cdn.bootcdn.net/ajax/libs/twitter-bootstrap/5.1.3/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        .profile-header {
+            background: white;
+            border-radius: 8px;
+            padding: 20px;
+            margin-bottom: 20px;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+        }
+        .profile-stats {
+            display: flex;
+            justify-content: space-around;
+            margin: 20px 0;
+            text-align: center;
+        }
+        .stat-item {
+            padding: 10px;
+        }
+        .stat-number {
+            font-size: 24px;
+            font-weight: bold;
+            color: #1a1a1a;
+        }
+        .stat-label {
+            color: #666;
+            font-size: 14px;
+        }
+        .content-card {
+            background: white;
+            border-radius: 8px;
+            padding: 20px;
+            margin-bottom: 20px;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+        }
+        .nav-tabs {
+            margin-bottom: 20px;
+        }
+    </style>
+</head>
+<body>
+    <nav class="navbar navbar-expand-lg navbar-light bg-light">
+        <div class="container">
+            <a class="navbar-brand" href="{{ url_for('index') }}">知乎</a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav me-auto">
+                    <li class="nav-item">
+                        <a class="nav-link" href="{{ url_for('index') }}">首页</a>
+                    </li>
+                </ul>
+                <div class="d-flex">
+                    {% if current_user.is_authenticated %}
+                        <span class="navbar-text me-3">
+                            欢迎，{{ current_user.Username }}
+                        </span>
+                        <a href="{{ url_for('logout') }}" class="btn btn-outline-primary">退出</a>
+                    {% else %}
+                        <a href="{{ url_for('login') }}" class="btn btn-outline-primary me-2">登录</a>
+                        <a href="{{ url_for('register') }}" class="btn btn-primary">注册</a>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container mt-4">
+        {% with messages = get_flashed_messages() %}
+            {% if messages %}
+                {% for message in messages %}
+                    <div class="alert alert-info">{{ message }}</div>
+                {% endfor %}
+            {% endif %}
+        {% endwith %}
+
+        <div class="profile-header">
+            <div class="row">
+                <div class="col-md-8">
+                    <h2>{{ user.Username }}</h2>
+                    <p class="text-muted">
+                        注册于 {{ user.RegistrationTime.strftime('%Y-%m-%d') }}
+                        {% if user.Gender == 0 %}
+                            · 男
+                        {% else %}
+                            · 女
+                        {% endif %}
+                    </p>
+                    {% if user.Profile %}
+                        <p>{{ user.Profile }}</p>
+                    {% endif %}
+                </div>
+                <div class="col-md-4 text-end">
+                    {% if current_user.is_authenticated and current_user.UserID == user.UserID %}
+                        <a href="{{ url_for('edit_profile', user_id=user.UserID) }}" class="btn btn-outline-primary">编辑资料</a>
+                    {% endif %}
+                </div>
+            </div>
+
+            <div class="profile-stats">
+                <div class="stat-item">
+                    <div class="stat-number">{{ stats.questions_count }}</div>
+                    <div class="stat-label">提问</div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-number">{{ stats.answers_count }}</div>
+                    <div class="stat-label">回答</div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-number">{{ stats.comments_count }}</div>
+                    <div class="stat-label">评论</div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-number">{{ stats.total_upvotes }}</div>
+                    <div class="stat-label">获赞</div>
+                </div>
+            </div>
+        </div>
+
+        <ul class="nav nav-tabs" id="profileTabs" role="tablist">
+            <li class="nav-item">
+                <a class="nav-link active" id="questions-tab" data-bs-toggle="tab" href="#questions" role="tab">提问</a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link" id="answers-tab" data-bs-toggle="tab" href="#answers" role="tab">回答</a>
+            </li>
+        </ul>
+
+        <div class="tab-content" id="profileTabsContent">
+            <div class="tab-pane fade show active" id="questions" role="tabpanel">
+                {% for question in questions %}
+                    <div class="content-card">
+                        <h5><a href="{{ url_for('question_detail', question_id=question.QuestionID) }}" class="text-decoration-none text-dark">{{ question.Title }}</a></h5>
+                        <p class="text-muted">{{ question.Content[:200] }}{% if question.Content|length > 200 %}...{% endif %}</p>
+                        <div class="d-flex justify-content-between align-items-center">
+                            <div>
+                                <span class="badge bg-light text-dark">{{ question.topic.TopicName }}</span>
+                                <small class="text-muted ms-2">{{ question.answers|length }} 个回答</small>
+                            </div>
+                            <small class="text-muted">{{ question.CreateTime.strftime('%Y-%m-%d %H:%M') }}</small>
+                        </div>
+                    </div>
+                {% endfor %}
+            </div>
+
+            <div class="tab-pane fade" id="answers" role="tabpanel">
+                {% for answer in answers %}
+                    <div class="content-card">
+                        <h5><a href="{{ url_for('question_detail', question_id=answer.QuestionID) }}" class="text-decoration-none text-dark">{{ answer.question.Title }}</a></h5>
+                        <p class="text-muted">{{ answer.Content[:200] }}{% if answer.Content|length > 200 %}...{% endif %}</p>
+                        <div class="d-flex justify-content-between align-items-center">
+                            <div>
+                                <span class="badge bg-light text-dark">获赞 {{ answer.UpvoteCount }}</span>
+                                <small class="text-muted ms-2">{{ answer.comments|length }} 条评论</small>
+                            </div>
+                            <small class="text-muted">{{ answer.AnswerTime.strftime('%Y-%m-%d %H:%M') }}</small>
+                        </div>
+                    </div>
+                {% endfor %}
+            </div>
+        </div>
+
+        <h2 class="mb-3">{{ user.Username }} 的个人主页</h2>
+
+        {% if current_user.is_authenticated and current_user.UserID == user.UserID %}
+            <a href="{{ url_for('edit_profile', user_id=user.UserID) }}" class="btn btn-primary btn-sm mb-3">编辑个人资料</a>
+            
+            <!-- 注销账号按钮 -->
+            <form action="{{ url_for('delete_user', user_id=user.UserID) }}" method="POST" class="d-inline ms-2" onsubmit="return confirm('确定要注销您的账号吗？此操作不可逆。');">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                <button type="submit" class="btn btn-danger btn-sm mb-3">注销账号</button>
+            </form>
+
+        {% endif %}
+    </div>
+
+    <script src="https://cdn.bootcdn.net/ajax/libs/twitter-bootstrap/5.1.3/js/bootstrap.bundle.min.js"></script>
+</body>
+</html> 

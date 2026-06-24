@@ -1,0 +1,55 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="row">
+        <div class="col-md-4">
+            <div class="card">
+                <div class="card-body">
+                    <h5 class="card-title">个人信息</h5>
+                    <p class="card-text">用户名：{{ user.Username }}</p>
+                    <p class="card-text">邮箱：{{ user.Email }}</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-8">
+            <h3>我的问题</h3>
+            <div id="questions-list">
+                <!-- 问题列表将通过JavaScript动态加载 -->
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+function loadUserQuestions(userId) {
+    fetch(`/api/user/${userId}/questions`)
+        .then(response => response.json())
+        .then(data => {
+            const questionsList = document.getElementById('questions-list');
+            questionsList.innerHTML = ''; // 清空现有内容
+            
+            data.forEach(question => {
+                const questionElement = document.createElement('div');
+                questionElement.className = 'card mb-3';
+                questionElement.innerHTML = `
+                    <div class="card-body">
+                        <h5 class="card-title">${question.Title}</h5>
+                        <p class="card-text">话题：${question.TopicName}</p>
+                        <p class="card-text">回答数：${question.answer_count}</p>
+                        <a href="/question/${question.QuestionID}" class="btn btn-primary">查看详情</a>
+                    </div>
+                `;
+                questionsList.appendChild(questionElement);
+            });
+        })
+        .catch(error => console.error('Error:', error));
+}
+
+// 页面加载时调用
+document.addEventListener('DOMContentLoaded', function() {
+    const userId = {{ current_user.UserID }};
+    loadUserQuestions(userId);
+});
+</script>
+{% endblock %} 

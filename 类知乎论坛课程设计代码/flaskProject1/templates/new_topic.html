@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>创建话题 - 知乎</title>
+    <link href="https://cdn.bootcdn.net/ajax/libs/twitter-bootstrap/5.1.3/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        .topic-form {
+            background: white;
+            border-radius: 8px;
+            padding: 20px;
+            margin-bottom: 20px;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+        }
+    </style>
+</head>
+<body>
+    <nav class="navbar navbar-expand-lg navbar-light bg-light">
+        <div class="container">
+            <a class="navbar-brand" href="{{ url_for('index') }}">知乎</a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav me-auto">
+                    <li class="nav-item">
+                        <a class="nav-link" href="{{ url_for('index') }}">首页</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="{{ url_for('topic_list') }}">话题</a>
+                    </li>
+                </ul>
+                <form action="{{ url_for('search') }}" method="GET" class="d-flex me-3">
+                    <input type="text" name="q" class="form-control" placeholder="搜索问题或话题..." style="width: 200px;">
+                    <input type="hidden" name="type" value="question">
+                    <button type="submit" class="btn btn-outline-primary ms-2">搜索</button>
+                </form>
+                <div class="d-flex">
+                    {% if current_user.is_authenticated %}
+                        <div class="dropdown">
+                            <a class="btn btn-secondary dropdown-toggle" href="#" role="button" id="dropdownMenuLink" data-bs-toggle="dropdown" aria-expanded="false">
+                                {{ current_user.Username }}
+                            </a>
+                            <ul class="dropdown-menu" aria-labelledby="dropdownMenuLink">
+                                <li><a class="dropdown-item" href="{{ url_for('user_profile', user_id=current_user.UserID) }}">个人主页</a></li>
+                                <li><a class="dropdown-item" href="{{ url_for('logout') }}">退出登录</a></li>
+                            </ul>
+                        </div>
+                    {% else %}
+                        <a href="{{ url_for('login') }}" class="btn btn-outline-primary me-2">登录</a>
+                        <a href="{{ url_for('register') }}" class="btn btn-primary">注册</a>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container mt-4">
+        {% with messages = get_flashed_messages() %}
+            {% if messages %}
+                {% for message in messages %}
+                    <div class="alert alert-info">{{ message }}</div>
+                {% endfor %}
+            {% endif %}
+        {% endwith %}
+
+        <div class="topic-form">
+            <h2 class="mb-4">创建新话题</h2>
+            <form method="POST">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                <div class="mb-3">
+                    <label for="topic_name" class="form-label">话题名称</label>
+                    <input type="text" class="form-control" id="topic_name" name="topic_name" required>
+                    <div class="form-text">话题名称应该简洁明了，便于用户理解</div>
+                </div>
+
+                <div class="d-flex justify-content-between">
+                    <a href="{{ url_for('topic_list') }}" class="btn btn-outline-secondary">取消</a>
+                    <button type="submit" class="btn btn-primary">创建话题</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script src="https://cdn.bootcdn.net/ajax/libs/twitter-bootstrap/5.1.3/js/bootstrap.bundle.min.js"></script>
+</body>
+</html> 
